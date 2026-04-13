@@ -368,7 +368,8 @@ def main(cfg_exp) -> None:
     show_prog_bar = cfg_exp.get("show_prog_bar", False)
     if not is_cluster_run or single:
         # Rewrite number of GPUs and nodes for local runs or if single flag is used
-        cfg_exp.hardware.ngpus_per_node_ = 1
+        if single:
+            cfg_exp.hardware.ngpus_per_node_ = 1
         cfg_exp.hardware.nnodes_ = 1
         cfg_exp.run_name = cfg_exp.run_name + "_local"
     log_info(f"Exp config {cfg_exp}")
