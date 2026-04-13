@@ -1,0 +1,110 @@
+# PepMerge Finetune Config
+# 基于 configs/example/training_local_latents_binder.yaml 修改
+# 用途：在 complexa.ckpt 预训练权重基础上，用 PepMerge 肽-受体数据 finetune
+
+run_name: finetune_pepmerge
+
+hardware:
+  ncpus_per_task_train_: 24
+  ncpus_per_task_prepro_: 32
+  accelerator: gpu
+
+  # [TODO] 改成你实际的 GPU 数量（原值 8）
+  ngpus_per_node_: 8  # → 改为你的实际数量，如 1 或 2
+
+  # [TODO] 改成你实际的节点数量（原值 4）
+  nnodes_: 4  # → 本地单机改为 1
+
+defaults:
+  - nn: local_latents_score_nn_160M
+  - generation: validation_local_latents
+
+  # [TODO] 改成你的 dataset config 名（去掉路径前缀，只写文件名不含.yaml）
+  - dataset: afdb_preprocessed/afdb_cathdimer  # → 改为 unified/pepmerge_dataset
+
+  - _self_
+
+# [TODO] 填入预训练权重路径，从这里开始 finetune
+# 原值为空（从头训练），finetune 必须填
+pretrain_ckpt_path:  # → 改为 ./ckpts/complexa.ckpt
+
+autoencoder_ckpt_path: ./ckpts/complexa_ae.ckpt
+
+product_flowmatcher:
+  bb_ca:
+    zero_com_noise: False
+    guidance_enabled: true
+    dim: 3
+  local_latents:
+    zero_com_noise: False
+    guidance_enabled: True
+    dim: null
+
+loss:
+  t_distribution:
+    bb_ca:
+      name: mix_unif_beta
+      p1: 1.9
+      p2: 1.0
+      p3: 0.02
+    local_latents:
+      name: uniform
+      p1: 1.0
+      p2: 1.0
+    shared_groups:
+
+force_precision_f32: True
+
+training:
+  n_recycle: 0
+  motif_conditioning: False
+  self_cond: True
+  fold_cond: False
+
+  # [TODO] 原值 False，binder 训练需要打开 target conditioning
+  target_cond: False  # → 改为 True
+
+  mask_T_prob: 0.5
+  mask_A_prob: 0.5
+  mask_C_prob: 0.5
+  fold_label_sample_ratio: [0.5, 0.1, 0.15, 0.25]
+  p_folding_n_inv_folding_iters: 0.15
+
+# LoRA：finetune 推荐开启，防止灾难性遗忘
+lora:
+  # [TODO] 原值 null（关闭），finetune 建议改为 32
+  r: null  # → 改为 32
+
+  lora_alpha: 32.0
+  lora_dropout: 0.0
+  train_bias: none
+
+opt:
+  # [TODO] 原值 0.0001，finetune 学习率应更小
+  lr: 0.0001  # → 改为 0.00005 或更小
+
+  max_epochs: 10000000
+  accumulate_grad_batches: 1
+  skip_nan_grad: True
+  grad_and_weight_analysis: False
+  dist_strategy: ddp
+  val_check_interval: 5000
+
+log:
+  wandb_project: finetune_pepmerge
+
+  # [TODO] 没有配置 wandb 的话先改为 False
+  log_wandb: True  # → 改为 False
+
+  log_every_n_steps: 1
+  checkpoint: True
+  checkpoint_every_n_steps: 10000
+  last_ckpt_every_n_steps: 1500
+
+seed: 42
+
+ema:
+  decay: 0.999
+  validate_original_weights: False
+  every_n_steps: 1
+  cpu_offload: False
