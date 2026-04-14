@@ -2624,6 +2624,7 @@ class FilterTargetResiduesTransform(BaseTransform):
         graph.original_residue_count = num_original_residues
         graph.binder_residue_count = binder_residue_mask.sum().item()
         graph.target_residue_count = target_residue_mask.sum().item()
+        graph.num_nodes = int(binder_residue_mask.sum())
 
         # Remove full-complex masks - they served their purpose and would cause
         # shape mismatches in collate (neither binder-sized nor target-sized)
