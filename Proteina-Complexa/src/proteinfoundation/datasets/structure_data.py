@@ -830,6 +830,7 @@ class StructureDataModule(L.LightningDataModule):
                     val_metadata = val_metadata.query(f)
                 val_metadata = val_metadata.reset_index(drop=True)
         else:
+            full_metadata = full_metadata.sample(frac=1, random_state=42).reset_index(drop=True)
             n_train = int(len(full_metadata) * self.train_split)
             train_metadata = full_metadata.iloc[:n_train].reset_index(drop=True)
             val_metadata = full_metadata.iloc[n_train:].reset_index(drop=True)
