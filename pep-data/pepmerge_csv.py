@@ -7,12 +7,17 @@ import os
 import csv
 
 # ── 配置 ──────────────────────────────────────────────────
-DATA_DIR = "/Users/bytedance/Documents/peptides/dynamic-pep-pro/pep-data/PepMerge_release"
-OUTPUT_CSV = "/Users/bytedance/Documents/peptides/dynamic-pep-pro/pep-data/pepmerge_receptor.csv"
+DATA_DIR = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge_release"
+OUTPUT_CSV = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/pepmerge_receptor.csv"
 
 # 过滤掉肽长度 < MIN_PEP_LEN 的样本（对应 binder_min_length: 3）
 MIN_PEP_LEN = 3
 # ─────────────────────────────────────────────────────────
+
+STANDARD_AA = {
+    'ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'GLY', 'HIS', 'ILE',
+    'LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL'
+}
 
 
 def get_peptide_length(folder_path):
@@ -26,16 +31,27 @@ def get_peptide_length(folder_path):
     return len(seq)
 
 
+def has_nonstandard(pdb_path):
+    with open(pdb_path) as f:
+        for line in f:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                resname = line[17:20].strip()
+                if resname not in STANDARD_AA:
+                    return True
+    return False
+
+
 rows = []
 skipped_no_file = 0
 skipped_short_pep = 0
+skipped_nonstandard = 0
 
 for folder_name in sorted(os.listdir(DATA_DIR)):
     folder_path = os.path.join(DATA_DIR, folder_name)
     if not os.path.isdir(folder_path):
         continue
 
-    pdb_path = os.path.join(folder_path, "receptor_merge.pdb")
+    pdb_path = os.path.join(folder_path, "pocket_merge.pdb")
 
     # 跳过没有 receptor_merge.pdb 的（约 125 个）
     if not os.path.exists(pdb_path):
@@ -46,6 +62,11 @@ for folder_name in sorted(os.listdir(DATA_DIR)):
     pep_len = get_peptide_length(folder_path)
     if pep_len < MIN_PEP_LEN:
         skipped_short_pep += 1
+        continue
+
+    # 跳过含非标准残基的
+    if has_nonstandard(pdb_path):
+        skipped_nonstandard += 1
         continue
 
     rows.append({
@@ -61,4 +82,5 @@ with open(OUTPUT_CSV, "w", newline="") as f:
 print(f"写入：{len(rows)} 条")
 print(f"跳过（无 receptor_merge.pdb）：{skipped_no_file} 条")
 print(f"跳过（肽长度 < {MIN_PEP_LEN}）：{skipped_short_pep} 条")
+print(f"跳过（含非标准残基）：{skipped_nonstandard} 条")
 print(f"输出文件：{OUTPUT_CSV}")

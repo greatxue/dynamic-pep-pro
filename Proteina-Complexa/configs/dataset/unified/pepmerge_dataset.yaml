@@ -12,14 +12,14 @@ datamodule:
 
   # [TODO] 改成你的 CSV 文件绝对路径
   # CSV 需要两列：example_id 和 path（receptor_merge.pdb 的绝对路径）
-  metadata_file: /path/to/pepmerge.csv  # → 改这里
+  metadata_file: /mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge/train/metadata.csv  # → 改这里
 
   base_dir: ""
 
   # [TODO] 根据你的 GPU 显存调整，原值 6
-  batch_size: 6  # → 肽链短可适当加大，如 16
+  batch_size: 8 # → 肽链短可适当加大，如 16
 
-  num_workers: 16
+  num_workers: 1
   train_split: 0.99
   path_column: path
   id_column: example_id
@@ -31,21 +31,21 @@ datamodule:
 
     # No TEDDimerTransform needed - files are already pre-merged
     - _target_: proteinfoundation.datasets.transforms.CroppingTransform2
-      crop_size: 500
+      crop_size: 256
       interface_threshold: 8.0
       dist_mode: "bb_ca"
       data_mode: "all-atom"
 
       # [TODO] 原值 1，改为 3，过滤掉 0-2 残基的无效极短肽
-      binder_min_length: 1  # → 改为 3
+      binder_min_length: 3  # → 改为 3
 
       # [TODO] 原值 250，改为 30（PepMerge 肽最长 25 残基）
-      binder_max_length: 250  # → 改为 30
+      binder_max_length: 30 # → 改为 30
 
       binder_padding_length: 0
 
       # [TODO] 原值 50，改为 14（PepMerge 受体最短 14 残基）
-      target_min_length: 50  # → 改为 14
+      target_min_length: 14  # → 改为 14
 
       target_spatial_crop_threshold: 15.0
       max_num_target_chains: -1
