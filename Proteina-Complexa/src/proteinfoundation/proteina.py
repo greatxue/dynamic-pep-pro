@@ -387,15 +387,22 @@ class Proteina(L.LightningModule):
                 sync_dist=True,
             )
 
-    def validation_step(self, batch: dict, batch_idx: int, dataloader_idx: int):
+    def validation_step(self, batch: dict, batch_idx: int, dataloader_idx: int = 0):
         """Validation step dispatching to length-based generation or data-based loss.
 
         Args:
             batch: batch from dataset
             batch_idx: batch index (unused)
-            dataloader_idx: 0 for length dataloader (generation), 1 for data dataloader (loss)
+            dataloader_idx: 0 for length dataloader (generation), 1 for data dataloader (loss).
+                When only a single val dataloader is provided, defaults to 0 and routes to data loss.
         """
-        if dataloader_idx == 0:
+        val_loaders = self.trainer.val_dataloaders
+        num_val_loaders = len(val_loaders) if isinstance(val_loaders, list) else 1
+
+        if num_val_loaders == 1:
+            # Single dataloader: it's the data (loss) dataloader
+            self.validation_step_data(batch, batch_idx)
+        elif dataloader_idx == 0:
             self.validation_step_lens(batch, batch_idx)
         elif dataloader_idx == 1:
             self.validation_step_data(batch, batch_idx)
@@ -477,6 +484,9 @@ class Proteina(L.LightningModule):
         # self.on_validation_epoch_end_lens()
 
     def on_validation_epoch_end_data(self):
+        if self.validation_output_data:
+            avg_val_loss = sum(self.validation_output_data) / len(self.validation_output_data)
+            self.log("val/loss", avg_val_loss, sync_dist=True)
         self.validation_output_data = []
 
     def on_validation_epoch_end_lens(self):
