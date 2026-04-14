@@ -557,6 +557,7 @@ class CroppingTransform2(BaseTransform):
         try:
             candidate_chain_ids = asym_id[binder_candidate_seed_residues].unique()
             binder_chain_id = int(candidate_chain_ids[chain_lens[candidate_chain_ids].argmin()])
+            logger.debug(f"Binder select: chains={candidate_chain_ids.tolist()}, lens={chain_lens[candidate_chain_ids].tolist()}, picked={binder_chain_id}({int(chain_lens[binder_chain_id])})")
             binder_chain_seed_residues = binder_candidate_seed_residues[
                 asym_id[binder_candidate_seed_residues] == binder_chain_id
             ]
