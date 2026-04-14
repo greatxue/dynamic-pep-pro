@@ -553,12 +553,16 @@ class CroppingTransform2(BaseTransform):
                 f"No binder candidate seed residues found for pdb: {graph.id}, using top {k} interface residues as binder candidate seed residues, with min interface distance: {topk_vals.min().item():.2f}A"
             )
 
-        # randomly select a binder seed residue from interface residues
+        # select binder as the shortest interface chain (peptide = short chain = binder)
         try:
-            binder_seed_residue = random.choice(binder_candidate_seed_residues)
+            candidate_chain_ids = asym_id[binder_candidate_seed_residues].unique()
+            binder_chain_id = int(candidate_chain_ids[chain_lens[candidate_chain_ids].argmin()])
+            binder_chain_seed_residues = binder_candidate_seed_residues[
+                asym_id[binder_candidate_seed_residues] == binder_chain_id
+            ]
+            binder_seed_residue = random.choice(binder_chain_seed_residues)
         except Exception:
             raise ValueError(f"No binder candidate seed residues found for pdb: {graph.pdb_id}")
-        binder_chain_id = int(asym_id[binder_seed_residue])
 
         if (n_res - int(chain_lens[binder_chain_id])) < self.target_min_length and self.enforce_target_min_length:
             raise ValueError(f"Target chain too short for pdb: {graph.id}")
