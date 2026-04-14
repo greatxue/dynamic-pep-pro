@@ -484,6 +484,7 @@ class CroppingTransform2(BaseTransform):
         target_min_length: int = 50,
         enforce_target_min_length: bool = False,
         max_num_target_chains: int = -1,  # -1 for no limit
+        binder_chain_name: str | None = None,  # if set, always use this chain as binder
     ):
         """
         Args:
@@ -498,6 +499,9 @@ class CroppingTransform2(BaseTransform):
             enforce_target_min_length: whether to enforce the target chain to have at least target_min_length residues after cropping.
                 If True, target might have more chains than max_num_target_chains. Default is True.
             max_num_target_chains: the maximum number of target chains to include in the cropping, -1 for no limit. Default is -1.
+            binder_chain_name: if set, always select this chain letter (e.g. "A") as the binder,
+                bypassing the shortest-interface-chain heuristic. Useful when the binder chain is
+                known by name (e.g. PepMerge always puts the peptide in chain A).
         """
         self.crop_size = crop_size
         self.interface_threshold = interface_threshold
@@ -510,6 +514,7 @@ class CroppingTransform2(BaseTransform):
         self.target_min_length = target_min_length
         self.enforce_target_min_length = enforce_target_min_length
         self.max_num_target_chains = max_num_target_chains
+        self.binder_chain_name = binder_chain_name
         assert self.binder_min_length >= 2 * self.binder_padding_length + 1, (
             "binder_min_length must be >= 2 * binder_padding_length + 1"
         )
@@ -553,17 +558,35 @@ class CroppingTransform2(BaseTransform):
                 f"No binder candidate seed residues found for pdb: {graph.id}, using top {k} interface residues as binder candidate seed residues, with min interface distance: {topk_vals.min().item():.2f}A"
             )
 
-        # select binder as the shortest interface chain (peptide = short chain = binder)
-        try:
-            candidate_chain_ids = asym_id[binder_candidate_seed_residues].unique()
-            binder_chain_id = int(candidate_chain_ids[chain_lens[candidate_chain_ids].argmin()])
-            #logger.debug(f"Binder select: chains={candidate_chain_ids.tolist()}, lens={chain_lens[candidate_chain_ids].tolist()}, picked={binder_chain_id}({int(chain_lens[binder_chain_id])})")
-            binder_chain_seed_residues = binder_candidate_seed_residues[
-                asym_id[binder_candidate_seed_residues] == binder_chain_id
-            ]
-            binder_seed_residue = random.choice(binder_chain_seed_residues)
-        except Exception:
-            raise ValueError(f"No binder candidate seed residues found for pdb: {graph.pdb_id}")
+        # select binder chain
+        if self.binder_chain_name is not None:
+            # Use the explicitly named chain (e.g. always chain A for PepMerge).
+            # chain_names preserves PDB letter names regardless of ATOM record order.
+            chain_names = getattr(graph, "chain_names", [])
+            if self.binder_chain_name not in chain_names:
+                raise ValueError(
+                    f"binder_chain_name='{self.binder_chain_name}' not found in {getattr(graph, 'id', '?')}. "
+                    f"Available chains: {chain_names}"
+                )
+            binder_chain_id = chain_names.index(self.binder_chain_name)
+            binder_chain_residues = residues_idxs[asym_id == binder_chain_id]
+            if len(binder_chain_residues) == 0:
+                raise ValueError(
+                    f"Chain '{self.binder_chain_name}' has no residues in {getattr(graph, 'id', '?')}"
+                )
+            binder_seed_residue = int(random.choice(binder_chain_residues.tolist()))
+        else:
+            # select binder as the shortest interface chain (peptide = short chain = binder)
+            try:
+                candidate_chain_ids = asym_id[binder_candidate_seed_residues].unique()
+                binder_chain_id = int(candidate_chain_ids[chain_lens[candidate_chain_ids].argmin()])
+                #logger.debug(f"Binder select: chains={candidate_chain_ids.tolist()}, lens={chain_lens[candidate_chain_ids].tolist()}, picked={binder_chain_id}({int(chain_lens[binder_chain_id])})")
+                binder_chain_seed_residues = binder_candidate_seed_residues[
+                    asym_id[binder_candidate_seed_residues] == binder_chain_id
+                ]
+                binder_seed_residue = random.choice(binder_chain_seed_residues)
+            except Exception:
+                raise ValueError(f"No binder candidate seed residues found for pdb: {graph.pdb_id}")
 
         if (n_res - int(chain_lens[binder_chain_id])) < self.target_min_length and self.enforce_target_min_length:
             raise ValueError(f"Target chain too short for pdb: {graph.id}")

@@ -49,6 +49,7 @@ datamodule:
 
       target_spatial_crop_threshold: 15.0
       max_num_target_chains: -1
+      binder_chain_name: "A"  # PepMerge 中肽链固定为 A 链
 
     - _target_: proteinfoundation.datasets.transforms.ContactTransform
       cutoff: 8.0
