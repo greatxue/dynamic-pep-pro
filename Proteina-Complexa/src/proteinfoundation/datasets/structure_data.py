@@ -342,8 +342,12 @@ class StructureDataset(Dataset):
         # Convert to atom37
         data = atomarray_to_atom37(atom_array, sample_id=str(sample_id), atomworks_data=data)
         # Apply atom37 transforms
-        for transform in self.atom37_transforms:
-            data = transform(data)
+        try:
+            for transform in self.atom37_transforms:
+                data = transform(data)
+        except Exception as e:
+            logger.warning(f"Atom37 transform failed for {path}: {e}")
+            return None
 
         return data
 
