@@ -484,9 +484,14 @@ class Proteina(L.LightningModule):
         # self.on_validation_epoch_end_lens()
 
     def on_validation_epoch_end_data(self):
-        if self.validation_output_data:
-            avg_val_loss = sum(self.validation_output_data) / len(self.validation_output_data)
-            self.log("val/loss", avg_val_loss, sync_dist=True)
+        # Always call log unconditionally so all ranks participate in sync_dist all-reduce.
+        # If a rank received no val batches, log 0.0 (gets averaged out across ranks).
+        avg_val_loss = (
+            sum(self.validation_output_data) / len(self.validation_output_data)
+            if self.validation_output_data
+            else 0.0
+        )
+        self.log("val/loss", avg_val_loss, sync_dist=True)
         self.validation_output_data = []
 
     def on_validation_epoch_end_lens(self):
