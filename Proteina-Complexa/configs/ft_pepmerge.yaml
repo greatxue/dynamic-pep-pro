@@ -16,7 +16,7 @@ hardware:
   nnodes_: 1  # → 本地单机改为 1
 
 defaults:
-  - nn: local_latents_score_nn_160M
+  - nn: local_latents_score_nn_160M_binder
   - generation: validation_local_latents
 
   # [TODO] 改成你的 dataset config 名（去掉路径前缀，只写文件名不含.yaml）
@@ -68,7 +68,7 @@ training:
   mask_A_prob: 0.5
   mask_C_prob: 0.5
   fold_label_sample_ratio: [0.5, 0.1, 0.15, 0.25]
-  p_folding_n_inv_folding_iters: 0.15
+  p_folding_n_inv_folding_iters: 0.0
 
 # LoRA：finetune 推荐开启，防止灾难性遗忘
 lora: null
