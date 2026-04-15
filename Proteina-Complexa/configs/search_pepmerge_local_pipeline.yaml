@@ -23,10 +23,10 @@ run_name: pepmerge_gen
 # Checkpoint paths
 # =============================================================================
 # [TODO] 改为你的 finetune checkpoint 所在目录
-ckpt_path: ./ckpt
+ckpt_path: /mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/Proteina-Complexa/ckpt
 
 # [TODO] 改为 checkpoint 文件名（例如 last.ckpt 或具体 step 的 ckpt）
-ckpt_name: last.ckpt
+ckpt_name: complexa.ckpt
 
 # autoencoder checkpoint（与训练时保持一致）
 autoencoder_ckpt_path: ./ckpt/complexa_ae.ckpt

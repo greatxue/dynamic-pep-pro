@@ -6,8 +6,8 @@ import os
 import csv
 
 # ====== 配置 ======
-lmdb_path = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge/pep_pocket_train_structure_cache.lmdb"
-out_dir = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge/train"
+lmdb_path = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge/pep_pocket_test_structure_cache.lmdb"
+out_dir = "/mlx_devbox/users/xuezhongkai/playground/dynamic-pep-pro/pep-data/PepMerge/test"
 os.makedirs(out_dir, exist_ok=True)
 
 # ====== 氨基酸映射（按单字母字母序：A=ALA, C=CYS, D=ASP, ...）======

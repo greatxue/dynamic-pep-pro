@@ -17,7 +17,7 @@ datamodule:
   base_dir: ""
 
   # [TODO] 根据你的 GPU 显存调整，原值 6
-  batch_size: 8 # → 肽链短可适当加大，如 16
+  batch_size: 4 # → 肽链短可适当加大，如 16
 
   num_workers: 0
   train_split: 0.99

@@ -26,10 +26,10 @@ dataloader:
       _target_: proteinfoundation.datasets.gen_dataset.UniformInt
       low: 8     # 最短肽链长度
       high: 20   # 最长肽链长度
-      nsamples: 5
+      nsamples: 1
       endpoint: true
 
-    nrepeat_per_sample: 4  # 每个长度重复生成次数
+    nrepeat_per_sample: 1  # 每个长度重复生成次数
 
     conditional_features:
       - _target_: proteinfoundation.datasets.gen_dataset.TargetFeatures

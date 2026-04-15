@@ -2,7 +2,7 @@
 # 基于 configs/example/training_local_latents_binder.yaml 修改
 # 用途：在 complexa.ckpt 预训练权重基础上，用 PepMerge 肽-受体数据 finetune
 
-run_name: ft-pepmerge-0414-formal
+run_name: ft-pepmerge-0415-mambaout2
 
 hardware:
   ncpus_per_task_train_: 24
@@ -10,7 +10,7 @@ hardware:
   accelerator: gpu
 
   # [TODO] 改成你实际的 GPU 数量（原值 8）
-  ngpus_per_node_: 8  # → 改为你的实际数量，如 1 或 2
+  ngpus_per_node_: 4  # → 改为你的实际数量，如 1 或 2
 
   # [TODO] 改成你实际的节点数量（原值 4）
   nnodes_: 1  # → 本地单机改为 1
@@ -88,7 +88,7 @@ opt:
   skip_nan_grad: True
   grad_and_weight_analysis: False
   dist_strategy: ddp
-  val_check_interval: 5000
+  val_check_interval: 50
 
 log:
   wandb_project: finetune_pepmerge
@@ -98,7 +98,7 @@ log:
   log_csv: True
   log_every_n_steps: 1
   checkpoint: True
-  checkpoint_every_n_steps: 10000
+  checkpoint_every_n_steps: 1000
   last_ckpt_every_n_steps: 1500
 
 seed: 42
