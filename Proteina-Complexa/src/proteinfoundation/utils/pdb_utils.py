@@ -551,6 +551,15 @@ def load_target_from_pdb(target_spec, pdb_path, target_hotspots=None, convert_an
     if not hasattr(struct, "occupancy"):
         struct.set_annotation("occupancy", np.ones(len(struct), dtype=np.float32))
 
+    # Expand chain-only spec (e.g. "B") → "B{min_res}-{max_res}"
+    import re as _re
+    if _re.match(r'^[A-Za-z]$', target_spec.strip()):
+        _chain = target_spec.strip()
+        _ca = struct[struct.atom_name == "CA"]
+        _chain_ca = _ca[_ca.chain_id == _chain]
+        if len(_chain_ca) > 0:
+            target_spec = f"{_chain}{int(_chain_ca.res_id.min())}-{int(_chain_ca.res_id.max())}"
+
     select = AtomSelectionStack.from_contig(target_spec)
     mask = select.get_mask(struct)
     struct = struct[mask]
