@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.plugins.environments import SLURMEnvironment
+from lightning.pytorch.strategies import DDPStrategy
 from lightning.pytorch.utilities import rank_zero_only
 from loguru import logger
 from omegaconf import OmegaConf
@@ -415,7 +416,11 @@ def main(cfg_exp) -> None:
         default_root_dir=root_run,
         check_val_every_n_epoch=None,  # Leave like this
         val_check_interval=cfg_exp.opt.val_check_interval,
-        strategy=cfg_exp.opt.dist_strategy,
+        strategy=(
+            DDPStrategy(find_unused_parameters=True)
+            if cfg_exp.opt.dist_strategy == "ddp"
+            else cfg_exp.opt.dist_strategy
+        ),
         enable_progress_bar=show_prog_bar,
         plugins=plugins,
         limit_val_batches=100,
