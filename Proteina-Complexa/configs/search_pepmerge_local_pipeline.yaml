@@ -1,0 +1,45 @@
+# PepMerge Peptide Design Pipeline
+#
+# 使用方法（在项目根目录）：
+#   python src/proteinfoundation/generate.py \
+#     --config-name search_pepmerge_local_pipeline \
+#     ++generation.dataloader.dataset.conditional_features.0.pdb_path=./path/to/receptor.pdb \
+#     ++generation.dataloader.dataset.conditional_features.0.input_spec="B"
+#
+# 或直接修改本文件中的 pdb_path 和 input_spec，再运行：
+#   python src/proteinfoundation/generate.py \
+#     --config-name search_pepmerge_local_pipeline
+
+defaults:
+  - pipeline/binder/pepmerge_generate@generation
+  - _self_
+
+# =============================================================================
+# Run identification
+# =============================================================================
+run_name: pepmerge_gen
+
+# =============================================================================
+# Checkpoint paths
+# =============================================================================
+# [TODO] 改为你的 finetune checkpoint 所在目录
+ckpt_path: ./ckpt
+
+# [TODO] 改为 checkpoint 文件名（例如 last.ckpt 或具体 step 的 ckpt）
+ckpt_name: last.ckpt
+
+# autoencoder checkpoint（与训练时保持一致）
+autoencoder_ckpt_path: ./ckpt/complexa_ae.ckpt
+
+# =============================================================================
+# Job management
+# =============================================================================
+seed: 42
+gen_njobs: 1
+
+# =============================================================================
+# Hydra
+# =============================================================================
+hydra:
+  run:
+    dir: ./logs/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
